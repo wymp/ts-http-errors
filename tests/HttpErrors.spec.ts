@@ -16,6 +16,28 @@ describe("InternalServerError", () => {
     const e = new errors.InternalServerError("Test error!", "test");
     assert.equal("test", e.subcode);
   });
+
+  it("should allow us to attach and access obstructions", function() {
+    const e = new errors.InternalServerError("Test error!", "test");
+    assert.equal("test", e.subcode);
+
+    e.obstructions.push({
+      code: "SomeObstruction",
+      text: "There's something wrong with this thing."
+    });
+
+    assert.equal(e.obstructions.length, 1);
+    assert.equal(e.obstructions[0].code, "SomeObstruction");
+
+    const o = [
+      { code: "SomeObstruction", text: "Someting's wrong." },
+      { code: "SomethingElse", text: "Other things are wrong." },
+    ];
+    e.obstructions = o;
+
+    assert.equal(e.obstructions.length, 2);
+    assert.equal(e.obstructions[1].code, "SomethingElse");
+  });
 });
 
 describe("fromError static method", () => {
