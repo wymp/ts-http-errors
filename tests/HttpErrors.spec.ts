@@ -2,7 +2,35 @@ import "mocha";
 import { assert } from "chai";
 import * as errors from "../src/index";
 
-describe("InternalServerError", () => {
+// This is a test typing for errors with specific obstructions
+declare interface ObOne extends errors.ObstructionInterface<{ country: string; }> {
+  code: "ObOne";
+}
+declare interface ObTwo extends errors.ObstructionInterface<{
+  cashRequired: number;
+  cashOnHand: number;
+}> {
+  code: "ObTwo";
+}
+declare interface ObThree extends errors.ObstructionInterface<{
+  ourName: string;
+  theirName: string;
+}> {
+  code: "ObThree";
+}
+declare type SpecificObstructions = ObOne|ObTwo|ObThree;
+class MySpecificError extends errors.BadRequest {
+  public readonly name: string = "MySpecificError";
+  public obstructions: Array<SpecificObstructions> = [];
+}
+
+
+
+
+
+
+// Tests
+describe("General", () => {
   it("should have correct data", function() {
     const msg = "Something happened!";
     const e = new errors.InternalServerError(msg);
@@ -37,6 +65,66 @@ describe("InternalServerError", () => {
 
     assert.equal(e.obstructions.length, 2);
     assert.equal(e.obstructions[1].code, "SomethingElse");
+  });
+
+  it("should handle specific typing of complex errors elegantly", () => {
+    const e = new MySpecificError("Test error!", "test");
+
+    // Shouldn't be allowed to do this. Uncomment to test:
+    /*
+    e.obstructions = [{
+      code: "NotherThing",
+      text: "Nother thing is wrong",
+      params: {
+        ourCountry: "US",
+        theirCountry: "IT",
+      }
+    }];
+    e.obstructions = [{
+      code: "ObOne",
+      text: "First thing is wrong",
+      params: {
+        nope: "not valid"
+      }
+    }];
+     */
+
+    // _Should_ be allowed to do this
+    e.obstructions.push({
+      code: "ObOne",
+      text: "First thing is wrong",
+      params: {
+        country: "US"
+      }
+    });
+    e.obstructions.push({
+      code: "ObTwo",
+      text: "Second thing is wrong",
+      params: {
+        cashRequired: 10,
+        cashOnHand: 1
+      }
+    });
+    e.obstructions.push({
+      code: "ObThree",
+      text: "Third thing is wrong",
+      params: {
+        ourName: "us",
+        theirName: "them",
+      }
+    });
+
+    assert.equal("test", e.subcode);
+
+    assert.equal(e.obstructions.length, 3);
+    assert.equal(e.obstructions[0].code, "ObOne");
+
+    // Type guard should work for diff-union
+    const ob = e.obstructions[0];
+    if (ob.code === "ObOne") {
+      assert.ok(ob.params);
+      assert.equal(ob.params!.country, "US");
+    }
   });
 });
 

@@ -3,9 +3,10 @@ export type HttpStatusCode =
     417|418|420|422|423|424|425|426|428|429|431|444|449|450|451|499|
     500|501|502|503|504|505|506|507|508|509|510|511|598|599;
 
-export interface ObstructionInterface {
+export interface ObstructionInterface<ParamSet extends {[param: string]: unknown}> {
   code: string;
   text: string;
+  params?: ParamSet;
 }
 
 export abstract class HttpError extends Error implements NodeJS.ErrnoException {
@@ -17,7 +18,7 @@ export abstract class HttpError extends Error implements NodeJS.ErrnoException {
   public path?: string;
   public syscall?: string;
   public stack?: string;
-  public obstructions: Array<ObstructionInterface> = [];
+  public obstructions: Array<ObstructionInterface<{[param: string]: any}>> = [];
 
   public constructor(msg:string, public readonly subcode?: string) {
     super(msg);
