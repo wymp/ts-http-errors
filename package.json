@@ -1,6 +1,6 @@
 {
   "name": "@openfinance/http-errors",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A set of extensions to the standard Error class that add features that make it easy to convert thrown errors into detailed HTTP responses.",
   "repository": {
     "type": "git",
@@ -9,7 +9,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "tsc -p tsconfig.test.json && mocha dist-tests/tests"
+    "test": "tsc -p tsconfig.test.json && mocha dist-tests/tests",
+    "prepublish": "tsc"
   },
   "author": "OpenFinance",
   "license": "MIT",
