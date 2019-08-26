@@ -74,12 +74,30 @@ export class NotFound extends HttpError {
   }
 }
 
+export class NotAcceptable extends HttpError {
+  public readonly name: string = "NotAcceptable";
+  public readonly status = 406;
+  public constructor(msg: string, subcode?: string) {
+    super(msg, subcode);
+    this.code = "HTTP_NOT_ACCEPTABLE";
+  }
+}
+
 export class DuplicateResource extends HttpError {
   public readonly name: string = "DuplicateResourceError";
   public readonly status = 409;
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_DUPLICATE_RESOURCE";
+  }
+}
+
+export class UnsupportedMediaType extends HttpError {
+  public readonly name: string = "UnsupportedMediaType";
+  public readonly status = 415;
+  public constructor(msg: string, subcode?: string) {
+    super(msg, subcode);
+    this.code = "HTTP_UNSUPPORTED_MEDIA_TYPE";
   }
 }
 
