@@ -13,6 +13,8 @@ export interface ObstructionInterface<ParamSet = GenericParams> {
   params?: ParamSet;
 }
 
+type SimpleLogLevel = "debug"|"info"|"notice"|"warning"|"error"|"alert"|"critical"|"emergency";
+
 export abstract class HttpError extends Error implements NodeJS.ErrnoException {
   public readonly tag: "HttpError" = "HttpError";
   public abstract readonly name: string;
@@ -23,6 +25,7 @@ export abstract class HttpError extends Error implements NodeJS.ErrnoException {
   public syscall?: string;
   public stack?: string;
   public obstructions: Array<ObstructionInterface<{[param: string]: any}>> = [];
+  public loglevel: SimpleLogLevel = "error";
 
   public constructor(msg:string, public readonly subcode?: string) {
     super(msg);
@@ -41,6 +44,7 @@ export abstract class HttpError extends Error implements NodeJS.ErrnoException {
 export class BadRequest extends HttpError {
   public readonly name: string = "BadRequest";
   public readonly status = 400;
+  public loglevel: SimpleLogLevel = "warning";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_BAD_REQUEST";
@@ -50,6 +54,7 @@ export class BadRequest extends HttpError {
 export class Unauthorized extends HttpError {
   public readonly name: string = "Unauthorized";
   public readonly status = 401;
+  public loglevel: SimpleLogLevel = "notice";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_UNAUTHORIZED";
@@ -59,6 +64,7 @@ export class Unauthorized extends HttpError {
 export class Forbidden extends HttpError {
   public readonly name: string = "Forbidden";
   public readonly status = 403;
+  public loglevel: SimpleLogLevel = "notice";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_FORBIDDEN";
@@ -68,6 +74,7 @@ export class Forbidden extends HttpError {
 export class NotFound extends HttpError {
   public readonly name: string = "NotFound";
   public readonly status = 404;
+  public loglevel: SimpleLogLevel = "notice";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_NOT_FOUND";
@@ -77,6 +84,7 @@ export class NotFound extends HttpError {
 export class NotAcceptable extends HttpError {
   public readonly name: string = "NotAcceptable";
   public readonly status = 406;
+  public loglevel: SimpleLogLevel = "notice";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_NOT_ACCEPTABLE";
@@ -86,6 +94,7 @@ export class NotAcceptable extends HttpError {
 export class DuplicateResource extends HttpError {
   public readonly name: string = "DuplicateResourceError";
   public readonly status = 409;
+  public loglevel: SimpleLogLevel = "notice";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_DUPLICATE_RESOURCE";
@@ -95,6 +104,7 @@ export class DuplicateResource extends HttpError {
 export class UnsupportedMediaType extends HttpError {
   public readonly name: string = "UnsupportedMediaType";
   public readonly status = 415;
+  public loglevel: SimpleLogLevel = "info";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_UNSUPPORTED_MEDIA_TYPE";
@@ -104,6 +114,7 @@ export class UnsupportedMediaType extends HttpError {
 export class TooManyRequests extends HttpError {
   public readonly name: string = "TooManyRequests";
   public readonly status = 429;
+  public loglevel: SimpleLogLevel = "warning";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
     this.code = "HTTP_DUPLICATE_RESOURCE";
