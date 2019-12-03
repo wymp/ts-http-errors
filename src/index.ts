@@ -81,6 +81,16 @@ export class NotFound extends HttpError {
   }
 }
 
+export class MethodNotAllowed extends HttpError {
+  public readonly name: string = "MethodNotAllowed";
+  public readonly status = 405;
+  public loglevel: SimpleLogLevel = "notice";
+  public constructor(msg: string, subcode?: string) {
+    super(msg, subcode);
+    this.code = "HTTP_METHOD_NOT_ALLOWED";
+  }
+}
+
 export class NotAcceptable extends HttpError {
   public readonly name: string = "NotAcceptable";
   public readonly status = 406;
