@@ -1,6 +1,8 @@
 Http Errors
 ==========================================================================
 
+**NOTE: This library is now hosted on github packages at https://github.com/openfinanceio/ts-http-errors. For the latest updates, please use the package `@openfinanceio/ts-http-errors` and point npm to github package repo ([github guide](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)).**
+
 This is a small library that presents a set of pre-configured errors that correspond to some common HTTP status codes, such as 400, 401, 403, 404, 500, etc....
 
 The idea is that you can throw these like normal errors in your code, but then use them to fine-tune your actual HTTP response in a global handler function. For example, using express:
