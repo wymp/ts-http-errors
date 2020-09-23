@@ -127,7 +127,7 @@ export class TooManyRequests extends HttpError {
   public loglevel: SimpleLogLevel = "warning";
   public constructor(msg: string, subcode?: string) {
     super(msg, subcode);
-    this.code = "HTTP_DUPLICATE_RESOURCE";
+    this.code = "HTTP_TOO_MANY_REQUESTS";
   }
 }
 

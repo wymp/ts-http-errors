@@ -1,6 +1,6 @@
 {
   "name": "@openfinanceio/http-errors",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "A set of extensions to the standard Error class that add features that make it easy to convert thrown errors into detailed HTTP responses.",
   "repository": {
     "type": "git",
