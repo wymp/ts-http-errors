@@ -1,61 +1,56 @@
-import "mocha";
-import { assert } from "chai";
 import * as errors from "../src/index";
 
 // This is a test typing for errors with specific obstructions
-declare interface ObOne extends errors.ObstructionInterface<{ country: string; }> {
+declare interface ObOne extends errors.ObstructionInterface<{ country: string }> {
   code: "ObOne";
 }
-declare interface ObTwo extends errors.ObstructionInterface<{
-  cashRequired: number;
-  cashOnHand: number;
-}> {
+declare interface ObTwo
+  extends errors.ObstructionInterface<{
+    cashRequired: number;
+    cashOnHand: number;
+  }> {
   code: "ObTwo";
 }
-declare interface ObThree extends errors.ObstructionInterface<{
-  ourName: string;
-  theirName: string;
-}> {
+declare interface ObThree
+  extends errors.ObstructionInterface<{
+    ourName: string;
+    theirName: string;
+  }> {
   code: "ObThree";
 }
-declare type SpecificObstructions = ObOne|ObTwo|ObThree;
+declare type SpecificObstructions = ObOne | ObTwo | ObThree;
 class MySpecificError extends errors.BadRequest {
   public readonly name: string = "MySpecificError";
   public obstructions: Array<SpecificObstructions> = [];
 }
-
-
-
-
-
 
 // Tests
 describe("General", () => {
   it("should have correct data", function() {
     const msg = "Something happened!";
     const e = new errors.InternalServerError(msg);
-    assert.equal("InternalServerError", e.name);
-    assert.equal(msg, e.message);
-    assert.equal(500, e.status);
-    assert.equal("HTTP_INTERNAL_SERVER_ERROR", e.code);
+    expect(e.name).toBe("InternalServerError");
+    expect(e.message).toBe(msg);
+    expect(e.status).toBe(500);
+    expect(e.code).toBe("HTTP_INTERNAL_SERVER_ERROR");
   });
 
   it("should accept a subcode that is publicly accessible", function() {
     const e = new errors.InternalServerError("Test error!", "test");
-    assert.equal("test", e.subcode);
+    expect(e.subcode).toBe("test");
   });
 
   it("should allow us to attach and access obstructions", function() {
     const e = new errors.InternalServerError("Test error!", "test");
-    assert.equal("test", e.subcode);
+    expect(e.subcode).toBe("test");
 
     e.obstructions.push({
       code: "SomeObstruction",
-      text: "There's something wrong with this thing."
+      text: "There's something wrong with this thing.",
     });
 
-    assert.equal(e.obstructions.length, 1);
-    assert.equal(e.obstructions[0].code, "SomeObstruction");
+    expect(1).toBe(e.obstructions.length);
+    expect("SomeObstruction").toBe(e.obstructions[0].code);
 
     const o = [
       { code: "SomeObstruction", text: "Someting's wrong." },
@@ -63,8 +58,8 @@ describe("General", () => {
     ];
     e.obstructions = o;
 
-    assert.equal(e.obstructions.length, 2);
-    assert.equal(e.obstructions[1].code, "SomethingElse");
+    expect(2).toBe(e.obstructions.length);
+    expect("SomethingElse").toBe(e.obstructions[1].code);
   });
 
   it("should handle specific typing of complex errors elegantly", () => {
@@ -94,16 +89,16 @@ describe("General", () => {
       code: "ObOne",
       text: "First thing is wrong",
       params: {
-        country: "US"
-      }
+        country: "US",
+      },
     });
     e.obstructions.push({
       code: "ObTwo",
       text: "Second thing is wrong",
       params: {
         cashRequired: 10,
-        cashOnHand: 1
-      }
+        cashOnHand: 1,
+      },
     });
     e.obstructions.push({
       code: "ObThree",
@@ -111,19 +106,19 @@ describe("General", () => {
       params: {
         ourName: "us",
         theirName: "them",
-      }
+      },
     });
 
-    assert.equal("test", e.subcode);
+    expect(e.subcode).toBe("test");
 
-    assert.equal(e.obstructions.length, 3);
-    assert.equal(e.obstructions[0].code, "ObOne");
+    expect(3).toBe(e.obstructions.length);
+    expect("ObOne").toBe(e.obstructions[0].code);
 
     // Type guard should work for diff-union
     const ob = e.obstructions[0];
     if (ob.code === "ObOne") {
-      assert.ok(ob.params);
-      assert.equal(ob.params!.country, "US");
+      expect(ob.params).toBeDefined();
+      expect("US").toBe(ob.params!.country);
     }
   });
 });
@@ -133,22 +128,24 @@ describe("fromError static method", () => {
   const error = new Error(msg);
   it("should instantiate whatever class it's used on", function() {
     let e: errors.HttpError = errors.InternalServerError.fromError(error);
-    assert.equal("InternalServerError", e.name);
-    assert.equal(msg, e.message);
-    assert.equal(500, e.status);
-    assert.equal("HTTP_INTERNAL_SERVER_ERROR", e.code);
+    expect(e.name).toBe("InternalServerError");
+    expect(e.message).toBe(msg);
+    expect(e.status).toBe(500);
+    expect(e.code).toBe("HTTP_INTERNAL_SERVER_ERROR");
 
     e = errors.BadGateway.fromError(error);
-    assert.equal("BadGateway", e.name);
-    assert.equal(msg, e.message);
-    assert.equal(502, e.status);
-    assert.equal("HTTP_BAD_GATEWAY", e.code);
+    expect(e.name).toBe("BadGateway");
+    expect(e.message).toBe(msg);
+    expect(e.status).toBe(502);
+    expect(e.code).toBe("HTTP_BAD_GATEWAY");
   });
 });
 
 describe("isHttpError", () => {
   it("should typeguard correctly", function() {
-    [ new errors.InternalServerError("Test error"), new Error("Test error") ].forEach(function(error) {
+    [new errors.InternalServerError("Test error"), new Error("Test error")].forEach(function(
+      error
+    ) {
       try {
         throw error;
       } catch (e) {
@@ -156,10 +153,9 @@ describe("isHttpError", () => {
           e = errors.InternalServerError.fromError(e);
         }
 
-        assert.equal("InternalServerError", e.name);
-        assert.equal(500, e.status);
+        expect(e.name).toBe("InternalServerError");
+        expect(e.status).toBe(500);
       }
     });
   });
 });
-
