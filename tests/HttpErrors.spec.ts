@@ -121,6 +121,29 @@ describe("General", () => {
       expect("US").toBe(ob.params!.country);
     }
   });
+
+  test(`should accept additional obstruction and header parameters on construct`, () => {
+    const ob = { code: `test`, text: `fulltext` };
+    const header = { "X-Test-Error": "true" };
+    const e = new errors.BadRequest(`bad request`, `subcode`, [ob], header);
+
+    expect(e.obstructions).toHaveLength(1);
+    expect(e.obstructions[0]).toMatchObject(ob);
+    expect(e.headers).toMatchObject(header);
+    expect(e.message).toBe(`bad request`);
+    expect(e.subcode).toBe(`subcode`);
+  });
+
+  test(`should allow specifying stricter obstructions`, () => {
+    const ob = { code: `test`, text: `fulltext`, params: { one: 1, two: 2 } };
+    const e = new errors.BadRequest<{ one: number; two: number } | { three: number; four: number }>(
+      `bad request`,
+      `subcode`,
+      [ob]
+    );
+    expect(e.obstructions).toHaveLength(1);
+    expect(e.obstructions[0]).toMatchObject(ob);
+  });
 });
 
 describe("fromError static method", () => {
