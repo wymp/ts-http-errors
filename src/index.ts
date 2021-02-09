@@ -72,7 +72,7 @@ export abstract class HttpError<ObstructionParams extends GenericParams = Generi
   implements NodeJS.ErrnoException {
   public readonly tag: "HttpError" = "HttpError";
   public abstract readonly name: string;
-  public abstract readonly status: HttpStatusCode = 500;
+  public abstract readonly status: number = 500;
   public errno?: number;
   public code?: string;
   public path?: string;
@@ -95,6 +95,67 @@ export abstract class HttpError<ObstructionParams extends GenericParams = Generi
    */
   public static fromError<T>(this: { new (msg: string): T }, e: Error): T {
     return new this(e.message);
+  }
+
+  /**
+   * Shortcut to getting one of the defined errors in this package. If an error for the given code
+   * does not exist, returns a generic HttpError with the given code.
+   */
+  public static withStatus<ObsParams extends GenericParams = GenericParams>(
+    code: number,
+    msg: string,
+    subcode?: string,
+    obstructions?: Array<ObstructionInterface<ObsParams>>,
+    headers?: { [name: string]: string }
+  ) {
+    switch (code) {
+      case 400:
+        return new BadRequest(msg, subcode, obstructions, headers);
+      case 401:
+        return new Unauthorized(msg, subcode, obstructions, headers);
+      case 403:
+        return new Forbidden(msg, subcode, obstructions, headers);
+      case 404:
+        return new NotFound(msg, subcode, obstructions, headers);
+      case 405:
+        return new MethodNotAllowed(msg, subcode, obstructions, headers);
+      case 406:
+        return new NotAcceptable(msg, subcode, obstructions, headers);
+      case 409:
+        return new DuplicateResource(msg, subcode, obstructions, headers);
+      case 415:
+        return new UnsupportedMediaType(msg, subcode, obstructions, headers);
+      case 429:
+        return new TooManyRequests(msg, subcode, obstructions, headers);
+      case 500:
+        return new InternalServerError(msg, subcode, obstructions, headers);
+      case 501:
+        return new NotImplemented(msg, subcode, obstructions, headers);
+      case 502:
+        return new BadGateway(msg, subcode, obstructions, headers);
+      case 503:
+        return new ServiceUnavailable(msg, subcode, obstructions, headers);
+      case 504:
+        return new GatewayTimeout(msg, subcode, obstructions, headers);
+      case 507:
+        return new InsufficientStorage(msg, subcode, obstructions, headers);
+      case 508:
+        return new LoopDetected(msg, subcode, obstructions, headers);
+      default:
+        return new (class extends HttpError<ObsParams> {
+          public readonly name: string = `Http${code}Error`;
+          public readonly status = code;
+          public constructor(
+            msg: string,
+            public readonly subcode?: string,
+            public obstructions: Array<ObstructionInterface<ObsParams>> = [],
+            public headers: { [name: string]: string } = {}
+          ) {
+            super(msg, subcode, obstructions, headers);
+            this.code = `HTTP_${code}_ERROR`;
+          }
+        })(msg, subcode, obstructions, headers);
+    }
   }
 }
 

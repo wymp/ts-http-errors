@@ -164,6 +164,28 @@ describe("fromError static method", () => {
   });
 });
 
+describe("withStatus static method", () => {
+  it("should instantiate different errors according to the code provided", () => {
+    const badreq = errors.HttpError.withStatus(400, "Bad request");
+    expect(badreq.status).toBe(400);
+    expect(badreq.name).toBe("BadRequest");
+    expect(badreq.code).toBe("HTTP_BAD_REQUEST");
+    expect(badreq.message).toBe("Bad request");
+
+    const loop = errors.HttpError.withStatus(508, "Loop!");
+    expect(loop.status).toBe(508);
+    expect(loop.name).toBe("LoopDetected");
+    expect(loop.code).toBe("HTTP_LOOP_DETECTED");
+    expect(loop.message).toBe("Loop!");
+
+    const custom = errors.HttpError.withStatus(555, "My custom error");
+    expect(custom.status).toBe(555);
+    expect(custom.name).toBe("Http555Error");
+    expect(custom.code).toBe("HTTP_555_ERROR");
+    expect(custom.message).toBe("My custom error");
+  });
+});
+
 describe("isHttpError", () => {
   it("should typeguard correctly", function() {
     [new errors.InternalServerError("Test error"), new Error("Test error")].forEach(function(
