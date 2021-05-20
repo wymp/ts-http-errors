@@ -1,7 +1,6 @@
-Http Errors
-==========================================================================
+# Http Errors
 
-**NOTE: This library is now hosted on github packages at https://github.com/openfinanceio/ts-http-errors. For the latest updates, please use the package `@openfinanceio/ts-http-errors` and point npm to github package repo ([github guide](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)).**
+**NOTE: This library is now hosted on github packages at https://github.com/wymp/ts-http-errors. For the latest updates, please use the package `@wymp/ts-http-errors` and point npm to github package repo ([github guide](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)).**
 
 This is a small library that presents a set of pre-configured errors that correspond to some common HTTP status codes, such as 400, 401, 403, 404, 500, etc....
 
@@ -18,13 +17,16 @@ const app = express();
 app.get("/my/endpoint", function(req, res, next) {
   try {
     if (!req.headers("Authorization")) {
-      throw new errors.Unauthorized("You must pass a standard Authorization header to use this endpoint", "MissingAuthHeader");
+      throw new errors.Unauthorized(
+        "You must pass a standard Authorization header to use this endpoint",
+        "MissingAuthHeader"
+      );
     }
 
     // May throw errors.Forbidden
     authenticate(req.headers("Authorization"));
 
-    return res.status(200).send({data:"Yay!"});
+    return res.status(200).send({ data: "Yay!" });
   } catch (e) {
     next(e);
   }
@@ -44,9 +46,9 @@ app.use(function(e: Error, req, res, next) {
         status: e.status,
         code: e.code!,
         title: e.title,
-        detail: e.message
-      }
-    ]
+        detail: e.message,
+      },
+    ],
   });
 });
 ```
@@ -54,9 +56,8 @@ app.use(function(e: Error, req, res, next) {
 ## API
 
 The best way to understand the API for these errors is to simply look at the
-[definitions file](https://github.com/OpenFinanceIO/ts-http-errors/blob/master/src/index.ts),
+[definitions file](https://github.com/wymp/ts-http-errors/blob/v1.x/src/index.ts),
 which is fairly small. However, for ease of reference, below is an overview:
-
 
 ### isHttpError()
 
@@ -64,29 +65,28 @@ This is a simple function that offers typeguarding for errors. For any catch blo
 can simply pass in the error object you receive, and if it's not an HttpError, you can
 convert it to one using the static `fromError()` method available on all errors in the library.
 
-
 ### HttpError
 
 This is the (abstract) base class for all errors in this library. All errors have the following
 properties, which are defined in this base class:
 
-* `readonly tag: "HttpError" = "HttpError"` -- Always `HttpError` so you can easily tell whether
+- `readonly tag: "HttpError" = "HttpError"` -- Always `HttpError` so you can easily tell whether
   or not you're dealing with an `HttpError`.
-* `readonly name: string;` -- An error ID which is usually statically defined. For example,
+- `readonly name: string;` -- An error ID which is usually statically defined. For example,
   a "Bad Request" might be defined with this property set to `BadRequest`, such that you can
   always determine what type of error you're dealing with at runtime.
-* `readonly status: HttpStatusCode;` -- any of the (finite) list of valid HTTP numeric status
+- `readonly status: HttpStatusCode;` -- any of the (finite) list of valid HTTP numeric status
   codes. This is usually defined statically in the specific error definition, so you don't have
   to set it yourself.
-* `errno?: number;` -- Part of the `NodeJS.ErrnoException` interface.
-* `code?: string;` -- A useful code indicating what specific error this is (e.g., `IncorrectEmail`,
-* `readonly subcode?: string;` -- A secondary code to further specify the error (e.g., `IncorrectFormat`,
+- `errno?: number;` -- Part of the `NodeJS.ErrnoException` interface.
+- `code?: string;` -- A useful code indicating what specific error this is (e.g., `IncorrectEmail`,
+- `readonly subcode?: string;` -- A secondary code to further specify the error (e.g., `IncorrectFormat`,
   `MiddleNameRequired`, etc....)
-* `path?: string;` -- The path through the data where the error occurred (e.g.,
+- `path?: string;` -- The path through the data where the error occurred (e.g.,
   `data.attributes.legalName`)
-* `syscall?: string;` -- Part of the `NodeJS.ErrnoException` interface.
-* `stack?: string;` -- Part of the `NodeJS.ErrnoException` interface.
-* `obstructions: Array<ObstructionInterface<{[param: string]: any}>>;` -- This error's
+- `syscall?: string;` -- Part of the `NodeJS.ErrnoException` interface.
+- `stack?: string;` -- Part of the `NodeJS.ErrnoException` interface.
+- `obstructions: Array<ObstructionInterface<{[param: string]: any}>>;` -- This error's
   array of obstructions (see [Obstructions](#obstructions) below).
 
 `HttpError` itself is an abstract class. You'll actually be using descendent classes when
@@ -117,7 +117,6 @@ throw new InvalidEmailError("Your email must be in standard format", "IncorrectF
 In the above example, you can easily throw an error with a lot of data attached to it
 by default, then add specificity ("IncorrectFormat") in context.
 
-
 ### `fromError`
 
 `HttpError` defines a static method, `fromError` which takes any Error object and converts
@@ -136,7 +135,6 @@ try {
   // ...
 }
 ```
-
 
 ### Obstructions
 
