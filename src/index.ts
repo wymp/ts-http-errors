@@ -67,9 +67,9 @@ type SimpleLogLevel =
   | "critical"
   | "emergency";
 
-export abstract class HttpError<ObstructionParams extends GenericParams = GenericParams>
-  extends Error
-  implements NodeJS.ErrnoException {
+export abstract class HttpError<
+  ObstructionParams extends GenericParams = GenericParams
+> extends Error {
   public readonly tag: "HttpError" = "HttpError";
   public abstract readonly name: string;
   public abstract readonly status: number = 500;
