@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+set -e
+
+if [ -z "$SKIP_LINTING" ]; then
+    pnpm typecheck
+    pnpm prettier
+    pnpm lint
+fi
+
+if [ -z "$SKIP_TESTS" ]; then
+    pnpm test:jest
+fi

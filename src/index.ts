@@ -57,22 +57,12 @@ export interface ObstructionInterface<ParamSet = GenericParams> {
   params?: ParamSet;
 }
 
-type SimpleLogLevel =
-  | "debug"
-  | "info"
-  | "notice"
-  | "warning"
-  | "error"
-  | "alert"
-  | "critical"
-  | "emergency";
+type SimpleLogLevel = "debug" | "info" | "notice" | "warning" | "error" | "alert" | "critical" | "emergency";
 
-export abstract class HttpError<
-  ObstructionParams extends GenericParams = GenericParams
-> extends Error {
-  public readonly tag: "HttpError" = "HttpError";
+export abstract class HttpError<ObstructionParams extends GenericParams = GenericParams> extends Error {
+  public readonly tag = "HttpError" as const;
   public abstract readonly name: string;
-  public abstract readonly status: number = 500;
+  public abstract readonly status: number;
   public errno?: number;
   public code?: string;
   public path?: string;
@@ -161,9 +151,7 @@ export abstract class HttpError<
 
 // 400 Errors
 
-export class BadRequest<ObstructionParams extends GenericParams = GenericParams> extends HttpError<
-  ObstructionParams
-> {
+export class BadRequest<ObstructionParams extends GenericParams = GenericParams> extends HttpError<ObstructionParams> {
   public readonly name: string = "BadRequest";
   public readonly status = 400;
   public loglevel: SimpleLogLevel = "warning";
@@ -179,7 +167,7 @@ export class BadRequest<ObstructionParams extends GenericParams = GenericParams>
 }
 
 export class Unauthorized<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "Unauthorized";
   public readonly status = 401;
@@ -195,9 +183,7 @@ export class Unauthorized<
   }
 }
 
-export class Forbidden<ObstructionParams extends GenericParams = GenericParams> extends HttpError<
-  ObstructionParams
-> {
+export class Forbidden<ObstructionParams extends GenericParams = GenericParams> extends HttpError<ObstructionParams> {
   public readonly name: string = "Forbidden";
   public readonly status = 403;
   public loglevel: SimpleLogLevel = "notice";
@@ -212,9 +198,7 @@ export class Forbidden<ObstructionParams extends GenericParams = GenericParams> 
   }
 }
 
-export class NotFound<ObstructionParams extends GenericParams = GenericParams> extends HttpError<
-  ObstructionParams
-> {
+export class NotFound<ObstructionParams extends GenericParams = GenericParams> extends HttpError<ObstructionParams> {
   public readonly name: string = "NotFound";
   public readonly status = 404;
   public loglevel: SimpleLogLevel = "notice";
@@ -230,7 +214,7 @@ export class NotFound<ObstructionParams extends GenericParams = GenericParams> e
 }
 
 export class MethodNotAllowed<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "MethodNotAllowed";
   public readonly status = 405;
@@ -247,7 +231,7 @@ export class MethodNotAllowed<
 }
 
 export class NotAcceptable<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "NotAcceptable";
   public readonly status = 406;
@@ -264,7 +248,7 @@ export class NotAcceptable<
 }
 
 export class DuplicateResource<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "DuplicateResourceError";
   public readonly status = 409;
@@ -281,7 +265,7 @@ export class DuplicateResource<
 }
 
 export class UnsupportedMediaType<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "UnsupportedMediaType";
   public readonly status = 415;
@@ -298,7 +282,7 @@ export class UnsupportedMediaType<
 }
 
 export class TooManyRequests<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "TooManyRequests";
   public readonly status = 429;
@@ -317,7 +301,7 @@ export class TooManyRequests<
 // 500 Errors
 
 export class InternalServerError<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "InternalServerError";
   public readonly status = 500;
@@ -333,7 +317,7 @@ export class InternalServerError<
 }
 
 export class NotImplemented<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "NotImplemented";
   public readonly status = 501;
@@ -348,9 +332,7 @@ export class NotImplemented<
   }
 }
 
-export class BadGateway<ObstructionParams extends GenericParams = GenericParams> extends HttpError<
-  ObstructionParams
-> {
+export class BadGateway<ObstructionParams extends GenericParams = GenericParams> extends HttpError<ObstructionParams> {
   public readonly name: string = "BadGateway";
   public readonly status = 502;
   public constructor(
@@ -365,7 +347,7 @@ export class BadGateway<ObstructionParams extends GenericParams = GenericParams>
 }
 
 export class ServiceUnavailable<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "ServiceUnavailable";
   public readonly status = 503;
@@ -381,7 +363,7 @@ export class ServiceUnavailable<
 }
 
 export class GatewayTimeout<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "GatewayTimeout";
   public readonly status = 504;
@@ -397,7 +379,7 @@ export class GatewayTimeout<
 }
 
 export class InsufficientStorage<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "InsufficientStorage";
   public readonly status = 507;
@@ -413,7 +395,7 @@ export class InsufficientStorage<
 }
 
 export class LoopDetected<
-  ObstructionParams extends GenericParams = GenericParams
+  ObstructionParams extends GenericParams = GenericParams,
 > extends HttpError<ObstructionParams> {
   public readonly name: string = "LoopDetected";
   public readonly status = 508;
@@ -430,6 +412,7 @@ export class LoopDetected<
 
 // Convenience functions
 
-export const isHttpError = function(e: any): e is HttpError {
-  return typeof e === "object" && e.hasOwnProperty("tag") && e.tag === "HttpError";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isHttpError = function (e: any): e is HttpError {
+  return typeof e === "object" && Object.prototype.hasOwnProperty.call(e, "tag") && e.tag === "HttpError";
 };

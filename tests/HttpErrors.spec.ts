@@ -26,7 +26,7 @@ class MySpecificError extends errors.BadRequest {
 
 // Tests
 describe("General", () => {
-  it("should have correct data", function() {
+  it("should have correct data", function () {
     const msg = "Something happened!";
     const e = new errors.InternalServerError(msg);
     expect(e.name).toBe("InternalServerError");
@@ -35,12 +35,12 @@ describe("General", () => {
     expect(e.code).toBe("HTTP_INTERNAL_SERVER_ERROR");
   });
 
-  it("should accept a subcode that is publicly accessible", function() {
+  it("should accept a subcode that is publicly accessible", function () {
     const e = new errors.InternalServerError("Test error!", "test");
     expect(e.subcode).toBe("test");
   });
 
-  it("should allow us to attach and access obstructions", function() {
+  it("should allow us to attach and access obstructions", function () {
     const e = new errors.InternalServerError("Test error!", "test");
     expect(e.subcode).toBe("test");
 
@@ -149,7 +149,7 @@ describe("General", () => {
 describe("fromError static method", () => {
   const msg = "Test error";
   const error = new Error(msg);
-  it("should instantiate whatever class it's used on", function() {
+  it("should instantiate whatever class it's used on", function () {
     let e: errors.HttpError = errors.InternalServerError.fromError(error);
     expect(e.name).toBe("InternalServerError");
     expect(e.message).toBe(msg);
@@ -187,17 +187,12 @@ describe("withStatus static method", () => {
 });
 
 describe("isHttpError", () => {
-  it("should typeguard correctly", function() {
-    [new errors.InternalServerError("Test error"), new Error("Test error")].forEach(function(
-      error
-    ) {
+  it("should typeguard correctly", function () {
+    [new errors.InternalServerError("Test error"), new Error("Test error")].forEach(function (error) {
       try {
         throw error;
-      } catch (e) {
-        if (!errors.isHttpError(e)) {
-          e = errors.InternalServerError.fromError(e);
-        }
-
+      } catch (_e) {
+        const e = errors.isHttpError(_e) ? _e : errors.InternalServerError.fromError(_e);
         expect(e.name).toBe("InternalServerError");
         expect(e.status).toBe(500);
       }

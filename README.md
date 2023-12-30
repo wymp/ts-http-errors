@@ -1,6 +1,5 @@
-# Http Errors
-
-**NOTE: This library is now hosted on github packages at https://github.com/wymp/ts-http-errors. For the latest updates, please use the package `@wymp/ts-http-errors` and point npm to github package repo ([github guide](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)).**
+Http Errors
+==================================================================================================================
 
 This is a small library that presents a set of pre-configured errors that correspond to some common HTTP status codes, such as 400, 401, 403, 404, 500, etc....
 
@@ -8,7 +7,7 @@ The idea is that you can throw these like normal errors in your code, but then u
 
 ```ts
 import * as express from "express";
-import * as errors from "http-errors";
+import * as Errors from "http-errors";
 import { authenticate } from "./Authnz";
 
 const app = express();
@@ -17,13 +16,13 @@ const app = express();
 app.get("/my/endpoint", function(req, res, next) {
   try {
     if (!req.headers("Authorization")) {
-      throw new errors.Unauthorized(
+      throw new Errors.Unauthorized(
         "You must pass a standard Authorization header to use this endpoint",
         "MissingAuthHeader"
       );
     }
 
-    // May throw errors.Forbidden
+    // May throw Errors.Forbidden
     authenticate(req.headers("Authorization"));
 
     return res.status(200).send({ data: "Yay!" });
@@ -35,8 +34,8 @@ app.get("/my/endpoint", function(req, res, next) {
 // Global handler, handling errors for all endpoints
 app.use(function(e: Error, req, res, next) {
   // If it's not already an HttpError, convert it into an InternalServerError (500)
-  if (!errors.isHttpError(e)) {
-    e = errors.InternalServerError.fromError(e);
+  if (!Errors.isHttpError(e)) {
+    e = Errors.InternalServerError.fromError(e);
   }
 
   // This happens to be JSON:API structure, but you could use the data however you'd like
@@ -56,7 +55,7 @@ app.use(function(e: Error, req, res, next) {
 ## API
 
 The best way to understand the API for these errors is to simply look at the
-[definitions file](https://github.com/wymp/ts-http-errors/blob/v1.x/src/index.ts),
+[definitions file](https://github.com/wymp/ts-http-errors/blob/current/src/index.ts),
 which is fairly small. However, for ease of reference, below is an overview:
 
 ### isHttpError()
@@ -123,7 +122,7 @@ by default, then add specificity ("IncorrectFormat") in context.
 it to an `HttpError` of the given type. This is most often used to turn native Errors into
 `InternalServerErrors` like so:
 
-```
+```ts
 try {
   woops this is gonna throw
 } catch (e) {
@@ -141,7 +140,7 @@ try {
 The concept of obstructions is specific to the `HttpError`s world. An obstruction is defined
 as follows:
 
-```
+```ts
 interface ObstructionInterface<ParamSet extends {[param: string]: unknown}> {
   code: string;
   text: string;
@@ -157,7 +156,7 @@ Imagine you're registering a new user. Using the `BadRequest` error with obstruc
 can easily stop execution and send back a 400 with useful information from anywhere in your
 code:
 
-```
+```ts
 const body = req.body;
 if (!body) {
   throw new BadRequest("Missing request body. Did you send it?");
@@ -181,7 +180,7 @@ if (!body.user.email) {
     text: "You must send an email for the user you're registering."
   });
 } else {
-  if (!validateEmail(body.user.email, ourEmailRegex) {
+  if (!validateEmail(body.user.email, ourEmailRegex)) {
     obstructions.push({
       code: "InvalidEmail",
       text: "Your email doesn't appear to be in valid format.",

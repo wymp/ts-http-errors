@@ -6,6 +6,7 @@
     "outDir": "./dist/",
     "baseUrl": ".",
     "strict": true,
+    "useUnknownInCatchVariables": false,
     "types": []
   },
   "include": ["./src/**/*.ts"]
