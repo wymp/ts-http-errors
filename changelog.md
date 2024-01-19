@@ -1,6 +1,17 @@
 Changelog
 ================================================================
 
+## v4.0.0
+
+**TOTAL REWRITE - MAJOR BREAKING CHANGES**
+
+* Removed all specific error subclasses (`BadRequest`, `InternalServerError`, etc.)
+* Changed constructor interface of `HttpError`
+* Change `ObstructionInterface`
+
+See readme for details.
+
+
 ## v3.0.0
 
 * Switched to pnpm
@@ -9,6 +20,7 @@ Changelog
 * Implemented eslint and prettier
 * Added github CI
 * Switched to publishing on npmjs.com
+
 
 ## v1.4.0
 

@@ -10,5 +10,5 @@ if [ -z "$SKIP_LINTING" ]; then
 fi
 
 if [ -z "$SKIP_TESTS" ]; then
-    pnpm test:jest
+    pnpm test
 fi

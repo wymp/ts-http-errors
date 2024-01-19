@@ -1,171 +1,174 @@
 Http Errors
 ==================================================================================================================
 
-This is a small library that presents a set of pre-configured errors that correspond to some common HTTP status codes, such as 400, 401, 403, 404, 500, etc....
+This is a small library whose primary export is the `HttpError` class, a derivative of the native `Error` class.
+`HttpError` can be instantiated and thrown like any error, except that it carries additional information that is
+pertinent to HTTP interactions.
 
-The idea is that you can throw these like normal errors in your code, but then use them to fine-tune your actual HTTP response in a global handler function. For example, using express:
+For example:
 
 ```ts
 import * as express from "express";
-import * as Errors from "http-errors";
+import { HttpError, isHttpError } from "http-errors";
 import { authenticate } from "./Authnz";
+import { doThings } from "./myLib";
+import { SimpleLoggerConsole } from "@wymp/simple-logger-console";
 
 const app = express();
+const log = new SimpleLoggerConsole();
 
 // Normal endpoint
 app.get("/my/endpoint", function(req, res, next) {
   try {
     if (!req.headers("Authorization")) {
-      throw new Errors.Unauthorized(
+      throw new HttpError(
+        401,
         "You must pass a standard Authorization header to use this endpoint",
-        "MissingAuthHeader"
+        { subcode: "MissingAuthHeader" }
       );
     }
 
-    // May throw Errors.Forbidden
+    // May throw additional HTTP errors, such as 400, 401 or 403
     authenticate(req.headers("Authorization"));
+    doThings(req);
 
+    // If nothing threw, just return 200 with our data
     return res.status(200).send({ data: "Yay!" });
   } catch (e) {
+    // Otherwise, pass the error to next
     next(e);
   }
 });
 
-// Global handler, handling errors for all endpoints
-app.use(function(e: Error, req, res, next) {
+// Global error handler
+app.use(function(_e: Error, req, res, next) {
   // If it's not already an HttpError, convert it into an InternalServerError (500)
-  if (!Errors.isHttpError(e)) {
-    e = Errors.InternalServerError.fromError(e);
-  }
+  const e = HttpError.from(_e);
 
-  // This happens to be JSON:API structure, but you could use the data however you'd like
+  // Log the error
+  log[e.logLevel](e.stack);
+
+  // Return the response with the correct status and structure
   return res.status(e.status).send({
-    errors: [
-      {
-        status: e.status,
-        code: e.code!,
-        title: e.title,
-        detail: e.message,
-      },
-    ],
+    ok: false,
+    // Note that an HttpError is properly serialized by JSON.stringify, so we don't need to do anything extra here
+    error: e
   });
 });
 ```
 
+
 ## API
 
-The best way to understand the API for these errors is to simply look at the
-[definitions file](https://github.com/wymp/ts-http-errors/blob/current/src/index.ts),
-which is fairly small. However, for ease of reference, below is an overview:
 
 ### isHttpError()
 
-This is a simple function that offers typeguarding for errors. For any catch block, you
-can simply pass in the error object you receive, and if it's not an HttpError, you can
-convert it to one using the static `fromError()` method available on all errors in the library.
+A typeguard allowing you to check if a given error is an `HttpError`. Probably better to just use `HttpError.from`
+instead. 
 
-### HttpError
 
-This is the (abstract) base class for all errors in this library. All errors have the following
-properties, which are defined in this base class:
+### `HttpError.from`
 
-- `readonly tag: "HttpError" = "HttpError"` -- Always `HttpError` so you can easily tell whether
-  or not you're dealing with an `HttpError`.
-- `readonly name: string;` -- An error ID which is usually statically defined. For example,
-  a "Bad Request" might be defined with this property set to `BadRequest`, such that you can
-  always determine what type of error you're dealing with at runtime.
-- `readonly status: HttpStatusCode;` -- any of the (finite) list of valid HTTP numeric status
-  codes. This is usually defined statically in the specific error definition, so you don't have
-  to set it yourself.
-- `errno?: number;` -- Part of the `NodeJS.ErrnoException` interface.
-- `code?: string;` -- A useful code indicating what specific error this is (e.g., `IncorrectEmail`,
-- `readonly subcode?: string;` -- A secondary code to further specify the error (e.g., `IncorrectFormat`,
-  `MiddleNameRequired`, etc....)
-- `path?: string;` -- The path through the data where the error occurred (e.g.,
-  `data.attributes.legalName`)
-- `syscall?: string;` -- Part of the `NodeJS.ErrnoException` interface.
-- `stack?: string;` -- Part of the `NodeJS.ErrnoException` interface.
-- `obstructions: Array<ObstructionInterface<{[param: string]: any}>>;` -- This error's
-  array of obstructions (see [Obstructions](#obstructions) below).
-
-`HttpError` itself is an abstract class. You'll actually be using descendent classes when
-throwing errors (see [Basic Errors](#basic-errors) below). These descendent errors are
-distinguishable at runtime (and in the context of
-[discriminated unions](https://www.typescriptlang.org/docs/handbook/advanced-types.html#discriminated-unions))
-via the `name` attribute, which will usually be the same as the constructor, but is defined
-statically in the descendant class definitions.
-
-The `code`, and `subcode` properties allow for further differentiation. `code` is a property
-from the `NodeJS.ErrnoException` interface and often used by native errors. Therefore, it is
-usually avoided in `HttpError`s. `subcode`, on the other hand, is settable via the optional
-second constructor parameter on every `HttpError` and may be used to very specifically
-describe the error.
-
-For example, you might define and use a new `InvalidEmail` Error like so:
-
-```
-class InvalidEmailError extends BadRequest {
-  code = "InvalidEmail"
-}
-
-// ...
-
-throw new InvalidEmailError("Your email must be in standard format", "IncorrectFormat");
-```
-
-In the above example, you can easily throw an error with a lot of data attached to it
-by default, then add specificity ("IncorrectFormat") in context.
-
-### `fromError`
-
-`HttpError` defines a static method, `fromError` which takes any Error object and converts
-it to an `HttpError` of the given type. This is most often used to turn native Errors into
-`InternalServerErrors` like so:
+Takes any Error object and converts it to an `HttpError`. This is most often used in catch blocks to turn native Errors
+into `HttpError`s like so:
 
 ```ts
 try {
   woops this is gonna throw
-} catch (e) {
-  if (!isHttpError(e)) {
-    e = InternalServerError.fromError(e);
-  }
+} catch (_err) {
+  const err = HttpError.from(_err);
 
-  // Now we know it's an HttpError. Format it and return a response
+  // Now we know it's an HttpError and can access its fields
   // ...
 }
 ```
 
-### Obstructions
 
-The concept of obstructions is specific to the `HttpError`s world. An obstruction is defined
-as follows:
+### `HttpError.toJSON` and `(static) HttpError.fromJSON`
+
+These methods allow you to easily serialize to JSON and de-serialize back into a native `HttpError`. To serialize,
+simply pass the error to `JSON.stringify` and it will output important fields (although not `headers` or `stack`, to
+avoid accidental leakage). To de-serialize, pass either the string or the already-deserialized object into the
+`HttpError.fromJSON` static method.
+
+For example:
 
 ```ts
-interface ObstructionInterface<ParamSet extends {[param: string]: unknown}> {
-  code: string;
-  text: string;
-  params?: ParamSet;
-}
+const e = new HttpError(404, "Not Found", { obstructions: [{ code: "something", text: "Some explanation" }] });
+const json = JSON.stringify(e);
+const inflated = HttpError.fromJSON(json);
+// e.status === inflated.status
+// e.name === inflated.name
+// e.obstructions == inflated.obstructions
+// etc...
 ```
 
-These are meant to be light-weight and data-dense packets that allow you to communicate to
-consumers about multiple issues that are preventing a given request from completing
-successfully.
 
-Imagine you're registering a new user. Using the `BadRequest` error with obstructions, you
-can easily stop execution and send back a 400 with useful information from anywhere in your
-code:
+### HttpError
+
+Throw this error instead of native errors in order to attach additional data pertinent to your application and to the
+HTTP context.
+
+Important fields are:
+
+* `status` - The status code of the error. (You must pass this into the constructor, and it defaults to 500 when
+  converting regular errors)
+* `name` - The standardized status text corresponding to the status code. (See also `HttpErrorStatuses`)
+* `subcode` - You can use this field to offer a concise, immutable code indicating more specifically what the error
+  pertains to. In the example above, we used `MissingAuthHeader` as the subcode in our 401. This can help the client
+  understand what needs to change about the request in order for it to succeed.
+* `logLevel` - This is an internal field that you can use in your system to determine whether or not to log this error.
+* `obstructions` - An optional collection of more specific data about why the user cannot do what they want to do. See
+  below.
+* `headers` - Some errors (such as 401) require certain headers to be returned. This allows you to do that.
+
+
+### Obstructions
+
+The concept of obstructions is specific to the `HttpError` world. An obstruction is defined as follows:
 
 ```ts
+export type ObstructionInterface<Data = undefined> = Data extends undefined
+  ? { code: string; text: string }
+  : { code: string; text: string; data: Data };
+```
+
+These are meant to be light-weight and data-dense packets that allow you to communicate to consumers about multiple
+issues that are preventing a given request from completing successfully.
+
+Imagine you're registering a new user. Using an `HttpError` with obstructions, you can easily stop execution and send
+back a 400 with useful information from anywhere in your code. In the following example, there are certain things for
+which we immediately throw and other things where we build up a list of obstructions and then throw.
+
+```ts
+// library: @my-org/types
+
+// First we'll define our obstructions. This allows front- and back-end code to work with type-safe errors
+import { ObstructionInterface } from "@wymp/http-errors";
+export type MyObstructions =
+  | ObstructionInterface<"NoUserName">
+  | ObstructionInterface<"NoEmail">
+  | ObstructionInterface<"InvalidEmail", { email: string; pattern: string }>
+  | ObstructionInterface<"NoPassword">
+  | ObstructionInterface<"NoPasswordConf">
+  | ObstructionInterface<"PasswordConfMismatch">;
+```
+
+```ts
+// app: @my-org/core
+
+import { MyObstructions } from "@my-org/types";
+
 const body = req.body;
 if (!body) {
-  throw new BadRequest("Missing request body. Did you send it?");
+  throw new HttpError(400, "Missing request body. Did you send it?");
 }
 if (!body.user) {
-  throw new BadRequest("Missing incoming user object. Did you send it?");
+  throw new HttpError(400, "Missing incoming user object. Did you send it?");
 }
 
-const obstructions: Array<ObstructionInterface<GenericParams>> = [];
+const obstructions: Array<MyObstructions> = [];
+const ourEmailRegex = /.../;
 
 if (!body.user.name) {
   obstructions.push({
@@ -187,9 +190,9 @@ if (!body.user.email) {
 
       // Note that we can provide data so consumers can be more detailed about
       // how they display the errors
-      params: {
+      data: {
         email: body.user.email,
-        pattern: ourEmailRegex
+        pattern: ourEmailRegex.toString()
       }
     });
   }
@@ -217,11 +220,9 @@ if (!body.user.password) {
 }
 
 if (obstructions.length > 0) {
-  const e = new BadRequest("There were problems registering your user.");
-  e.obstructions = obstructions;
-  throw e;
+  throw new HttpError(400, "There were problems registering your user.", { obstructions });
 }
 
-// Now we know it's safe. Continue processing here....
+// Continue processing....
 
 ```

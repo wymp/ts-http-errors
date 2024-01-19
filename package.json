@@ -1,18 +1,29 @@
 {
   "name": "@wymp/http-errors",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "A set of extensions to the standard Error class that add features that make it easy to convert thrown errors into detailed HTTP responses.",
   "repository": {
     "type": "git",
     "url": "https://github.com/wymp/ts-http-errors.git"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/httpErrors.js",
+  "types": "dist/httpErrors.d.ts",
+  "engines": {
+    "node": ">=14.0.0",
+    "pnpm": "^8"
+  },
+  "files": [
+    "dist",
+    "src",
+    "changelog.md",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
+    "check": "pnpm typecheck && pnpm prettier && pnpm lint && pnpm test",
     "clean": "rm -Rf dist || true; rm -Rf docs || true",
-    "docs:gen": "npx typedoc src/index.ts --out ./docs --sort visibility --sort source-order",
-    "docs:serve": "pnpx http-server ./docs",
+    "docs:gen": "npx typedoc src/httpErrors.ts --out ./docs --sort visibility --sort source-order",
+    "docs:view": "pnpx http-server -o -c 60 ./docs",
     "format": "pnpm prettier:fix && pnpm lint:fix",
     "lint": "eslint src tests",
     "lint:fix": "pnpm lint --fix",
@@ -21,8 +32,7 @@
     "prepublishOnly": "pnpm clean && pnpm build && npm run docs:gen",
     "prettier": "prettier src tests --check",
     "prettier:fix": "pnpm prettier --write",
-    "test": "pnpm typecheck && pnpm prettier && pnpm lint && pnpm test:jest",
-    "test:jest": "jest --verbose",
+    "test": "jest",
     "typecheck": "tsc --noEmit"
   },
   "author": "Wymp",
@@ -47,6 +57,7 @@
     "trailingComma": "es5"
   },
   "jest": {
+    "verbose": true,
     "roots": [
       "<rootDir>/tests"
     ],
